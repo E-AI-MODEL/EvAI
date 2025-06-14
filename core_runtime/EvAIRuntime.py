@@ -26,9 +26,21 @@ class EvAIRuntime:
             ]
         }
 
-    def generate_cot(self, parameter, context, rubric):
+    def generate_cot(self, params):
+        """Generate a chain-of-thought based on a single params dictionary."""
+
+        parameter = params.get("query") or params.get("parameter")
+        context = params.get("context", {})
+        rubric_field = params.get("rubric") or params.get("rubrics", {})
+        if isinstance(rubric_field, list):
+            rubric = rubric_field[0] if rubric_field else {}
+        else:
+            rubric = rubric_field or {}
+        if isinstance(rubric, str):
+            rubric = {"description": rubric}
+
         active_seeds = self.seed_memory.get_active_seeds()
-        seed_ids = [s.id for s in active_seeds]
+        seed_ids = [s["id"] for s in active_seeds]
         matched_pattern = self.pattern_matcher.match_pattern(seed_ids)
 
         # Enhanced reasoning with seed-based explanations
@@ -52,15 +64,19 @@ class EvAIRuntime:
 
         return {
             "cot_trace": reasoning,
+            "reasoning_steps": reasoning,
             "uncertainty_label": self.estimate_uncertainty(reasoning),
             "matched_descriptors": [rubric.get("descriptor", "n.v.t.")],
-            "active_seeds": [{"id": s.id, "type": s.type, "intention": s.intention, "emotion": s.emotion} for s in active_seeds]
+            "active_seeds": active_seeds,
+            "trace_log": self.trace_log,
         }
 
     def step_explain_with_seeds(self, param, rubric, active_seeds):
-        seed_explanations = [f"Seed {s.id} ({s.type}): {s.intention}" for s in active_seeds]
-        return f"[Explain] Parameter {param} wordt verklaard via rubric: {rubric.get('description', 'geen beschrijving')}. " \
-               f"Gebruikte seeds: {'; '.join(seed_explanations)}"
+        seed_explanations = [f"Seed {s['id']} ({s['type']}): {s['intention']}" for s in active_seeds]
+        return (
+            f"[Explain] Parameter {param} wordt verklaard via rubric: {rubric.get('description', 'geen beschrijving')}. "
+            f"Gebruikte seeds: {'; '.join(seed_explanations)}"
+        )
 
     def step_validate_with_uncertainty(self, param, rubric):
         validation = f"[Validate] Score ligt binnen bandbreedte {rubric.get('band', 'n.v.t.')}, gevalideerd met {rubric.get('source', 'onbekend')}."
@@ -69,14 +85,18 @@ class EvAIRuntime:
         return validation
 
     def step_assumptions_with_context(self, param, context, active_seeds):
-        seed_emotions = [f"{s.emotion} ({s.id})" for s in active_seeds]
-        return f"[Assumptions] Context analyse met emotionele seeds: {', '.join(seed_emotions)}. " \
-               f"Gebruikersinput: {context.get('user_input', 'n.v.t.')}"
+        seed_emotions = [f"{s['emotion']} ({s['id']})" for s in active_seeds]
+        return (
+            f"[Assumptions] Context analyse met emotionele seeds: {', '.join(seed_emotions)}. "
+            f"Gebruikersinput: {context.get('user_input', 'n.v.t.')}"
+        )
 
     def step_alternatives_with_seeds(self, param, rubric, active_seeds):
-        seed_intentions = [f"{s.intention} ({s.id})" for s in active_seeds]
-        return f"[Alternatives] Alternatieve scenario's gebaseerd op seeds: {', '.join(seed_intentions)}. " \
-               f"Risico's: {rubric.get('risks', 'geen')}"
+        seed_intentions = [f"{s['intention']} ({s['id']})" for s in active_seeds]
+        return (
+            f"[Alternatives] Alternatieve scenario's gebaseerd op seeds: {', '.join(seed_intentions)}. "
+            f"Risico's: {rubric.get('risks', 'geen')}"
+        )
 
     def step_contextualize_with_lim(self, param, context):
         lim_context = context.get('lim_profile', {})
