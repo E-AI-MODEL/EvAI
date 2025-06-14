@@ -1,0 +1,41 @@
+lim_vector_semantisch:
+  description: Semantisch gecodeerde vector op basis van denkstructuren, adviesvormen,
+    flags en parameterrelaties.
+  components:
+    cot_patterns:
+      description: Verhouding tussen denkstappen binnen de chain-of-thought.
+      index:
+        explain: 0
+        validate: 1
+        contextualize: 2
+        alternatives: 3
+      scale: 0.0–1.0 per component (float)
+      source: chain_of_thought
+    advice_types:
+      description: Aanwezigheid van advies per inhoudelijke rol of intentie.
+      index:
+        cognitief: 0
+        metacognitief: 1
+        agency_herstel: 2
+        sociaal_communicatief: 3
+        affectief_motiverend: 4
+      scale: 0 of 1 per type
+      source: advice_outcome
+    flags_risk_modes:
+      description: Risicotypes gekoppeld aan flags in deze sessie.
+      index:
+        ai_dominantie: 0
+        passiviteit: 1
+        biasherhaling: 2
+        hallucinatie: 3
+        overschatting: 4
+      scale: 0 of 1 per type
+      source: flags_active
+    relation_dynamics:
+      description: Aanwezige dynamiek tussen parameters.
+      index:
+        synergie: 0
+        conflict: 1
+        maskering: 2
+      scale: 0 of 1 per type
+      source: parameter_relations

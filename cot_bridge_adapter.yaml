@@ -1,0 +1,31 @@
+id: evai_cot_bridge
+name: "EvAI Chain-of-Thought Bridge"
+description: "Brugmodule die de EvAIRuntime activeert als redeneer-engine"
+version: "1.0.0"
+runtime_path: ./EvAIRuntime.py
+config:
+  seed_file: "seeds_activated.json"
+  pattern_file: "SeedTraceGraph_demo.json"
+  optional_steps:
+    - "validate_with_uncertainty"
+    - "assumptions_with_context"
+    - "alternatives_with_seeds"
+    - "contextualize_with_lim"
+
+input_mapping:
+  parameter: "{{ parameter }}"
+  context:
+    user_input: "{{ context_input.user_input }}"
+    domain: "{{ context_input.domain }}"
+    target_group: "{{ context_input.target_group }}"
+  rubric:
+    description: "{{ rubric.description }}"
+    band: "{{ rubric.band }}"
+    source: "{{ rubric.source }}"
+    risks: "{{ rubric.risks }}"
+    descriptor: "{{ rubric.descriptor }}"
+
+output_mapping:
+  cot_trace: cot_trace
+  uncertainty_label: uncertainty_label
+  matched_descriptors: matched_descriptors
