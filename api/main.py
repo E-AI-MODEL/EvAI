@@ -95,5 +95,10 @@ async def get_active_seeds():
         evai_logger.log_error({"error": str(e)})
         raise HTTPException(status_code=500, detail=str(e))
 
+def main() -> None:
+    """Run the EvAI API using uvicorn."""
+    uvicorn.run("api.main:app", host="0.0.0.0", port=8000)
+
+
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) 
+    main()
