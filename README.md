@@ -147,6 +147,104 @@ EvAI streeft ernaar om continu te groeien, zichzelf te verbeteren en maximaal be
 
 ---
 
+## Local Development Setup
+
+To run EvAI locally, you'll need Python (for the backend) and Node.js (for the frontend) installed.
+
+### Backend (API)
+
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository_url>
+    cd <repository_name>
+    ```
+
+2.  **Navigate to the API directory:**
+    ```bash
+    cd api
+    ```
+
+3.  **Create and activate a Python virtual environment:**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    ```
+
+4.  **Install dependencies:**
+    ```bash
+    pip install -r ../requirements.txt
+    ```
+    *Note: The requirements.txt is in the root, so we use `../requirements.txt` from the `api` directory.*
+
+5.  **Configure environment variables:**
+    *   Copy the example environment file:
+        ```bash
+        cp .env.example .env
+        ```
+    *   Edit `.env` and provide the necessary values, especially for `API_KEY`. `ALLOWED_ORIGINS` defaults to allow `http://localhost:3000`.
+
+6.  **Run the backend server:**
+    The API uses Uvicorn and is configured in `main.py`.
+    ```bash
+    python main.py
+    ```
+    Or, directly with uvicorn from the `api` directory:
+    ```bash
+    uvicorn main:app --reload --port 8000
+    ```
+    The API should now be running on `http://localhost:8000`.
+
+### Frontend
+
+1.  **Navigate to the frontend directory (from the repository root):**
+    ```bash
+    cd frontend
+    ```
+
+2.  **Install Node.js dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Configure environment variables (optional for local development):**
+    *   The frontend will attempt to connect to `http://localhost:8000` by default.
+    *   If your backend is running on a different URL, copy the example environment file:
+        ```bash
+        cp .env.example .env
+        ```
+    *   Edit `.env` and set `REACT_APP_API_URL` to your backend's URL.
+
+4.  **Start the frontend development server:**
+    ```bash
+    npm start
+    ```
+    The frontend should now be running on `http://localhost:3000` (or another port if 3000 is busy) and open in your default web browser.
+
+---
+
+## Deployment
+
+This application is configured for deployment using [Render](https://render.com/) via the `render.yaml` file.
+
+### Environment Variables on Render
+
+When deploying to Render (or a similar platform), you will need to configure the following environment variables in your service settings:
+
+**For the `evai-backend` service:**
+
+*   `API_KEY`: **Required.** Your secret API key for accessing the backend.
+*   `ALLOWED_ORIGINS`: **Required.** A comma-separated list of allowed origins for CORS. For example: `https://your-frontend-app.onrender.com,http://localhost:3000` (if you still want to allow local development access).
+*   `PYTHON_VERSION`: (Already in `render.yaml`) Specifies the Python version.
+
+**For the `evai-frontend` service:**
+
+*   `REACT_APP_API_URL`: **Required.** The public URL of your deployed `evai-backend` service. For example: `https://your-backend-app.onrender.com`.
+*   `NODE_VERSION`: (Already in `render.yaml`) Specifies the Node.js version.
+
+Ensure these are set correctly in the Render dashboard for each service. The placeholders in `render.yaml` will be overridden by the values you set in the dashboard.
+
+---
+
 ## Changelog & Roadmap
 
 - Hier houd je wijzigingen, uitbreidingen en toekomstige plannen bij.
