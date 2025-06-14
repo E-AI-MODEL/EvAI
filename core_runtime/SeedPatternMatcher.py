@@ -12,7 +12,18 @@ class SeedPatternMatcher:
             return json.load(f)
 
     def match_pattern(self, current_seed_ids):
+        """Return the pattern dict that exactly matches the given seed id list."""
         for pattern in self.patterns:
-            if pattern["Pattern"] == current_seed_ids:
+            if pattern.get("pattern") == current_seed_ids:
                 return pattern
         return None
+
+    def find_patterns(self, seeds):
+        """Return a list of patterns that contain any of the given seeds."""
+        seed_ids = {s.get("id") if isinstance(s, dict) else getattr(s, "id", None) for s in seeds}
+        matched = []
+        for pattern in self.patterns:
+            pat_ids = set(pattern.get("pattern", []))
+            if seed_ids & pat_ids:
+                matched.append(pattern)
+        return matched

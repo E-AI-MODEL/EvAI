@@ -42,8 +42,22 @@ class SeedMemory:
             data = json.load(f)
             return [Seed(**item) for item in data]
 
-    def get_active_seeds(self):
-        return [s for s in self.seeds if s.is_active()]
+    def get_active_seeds(self, context=None):
+        """Return currently active seeds as dictionaries.
+
+        The optional ``context`` argument is accepted for future filtering logic
+        but is currently unused.
+        """
+        active = [s for s in self.seeds if s.is_active()]
+        return [
+            {
+                "id": s.id,
+                "type": s.type,
+                "intention": s.intention,
+                "emotion": s.emotion,
+            }
+            for s in active
+        ]
 
     def find_seed(self, seed_id):
         return next((s for s in self.seeds if s.id == seed_id), None)
