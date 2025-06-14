@@ -1,7 +1,7 @@
 services:
-  - type: web
+  - type: static
     name: evai-frontend
-    env: node
+    env: static
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/build
     routes:
