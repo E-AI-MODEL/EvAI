@@ -1,4 +1,9 @@
+import os
+import sys
 import pytest
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from core_runtime.EvAIRuntime import EvAIRuntime
 from core_runtime.SeedEngine import SeedMemory
 from core_runtime.SeedPatternMatcher import SeedPatternMatcher
@@ -17,42 +22,45 @@ def test_evai_initialization(evai_runtime):
 
 def test_generate_cot(evai_runtime):
     """Test chain of thought generation"""
-    test_params = {
-        "query": "Test query",
-        "context": {"user_profile": "test_profile"},
-        "rubrics": ["test_rubric"]
-    }
-    result = evai_runtime.generate_cot(test_params)
+    result = evai_runtime.generate_cot(
+        "Test query",
+        {"user_profile": "test_profile"},
+        {"descriptor": "test_rubric"},
+    )
     assert isinstance(result, dict)
-    assert "reasoning_steps" in result
+    assert "cot_trace" in result
     assert "active_seeds" in result
-    assert "trace_log" in result
 
 def test_seed_activation(evai_runtime):
     """Test seed activation and matching"""
-    test_context = {"user_profile": "test_profile"}
-    active_seeds = evai_runtime.seed_memory.get_active_seeds(test_context)
+    active_seeds = evai_runtime.seed_memory.get_active_seeds()
     assert isinstance(active_seeds, list)
     if active_seeds:
-        assert all("id" in seed for seed in active_seeds)
-        assert all("type" in seed for seed in active_seeds)
+        assert all(hasattr(seed, "id") for seed in active_seeds)
+        assert all(hasattr(seed, "type") for seed in active_seeds)
 
 def test_pattern_matching(evai_runtime):
     """Test pattern matching functionality"""
+    # Use seed ids that exist in the demo pattern file
     test_seeds = [
-        {"id": "test1", "type": "core", "intention": "test"},
-        {"id": "test2", "type": "direction", "intention": "test"}
+        {"id": "Seed_0005"},
+        {"id": "Seed_0008"},
+        {"id": "Seed_0010"},
     ]
     patterns = evai_runtime.pattern_matcher.find_patterns(test_seeds)
     assert isinstance(patterns, list)
+    assert any(
+        set(p.get("pattern", [])) == {"Seed_0005", "Seed_0008", "Seed_0010"}
+        for p in patterns
+    )
 
 def test_trace_logging(evai_runtime):
     """Test trace logging functionality"""
-    test_params = {
-        "query": "Test query",
-        "context": {"user_profile": "test_profile"},
-        "rubrics": ["test_rubric"]
-    }
-    evai_runtime.generate_cot(test_params)
+    evai_runtime.generate_cot(
+        "Test query",
+        {"user_profile": "test_profile"},
+        {"descriptor": "test_rubric"},
+    )
     assert len(evai_runtime.trace_log) > 0
-    assert all(isinstance(entry, dict) for entry in evai_runtime.trace_log) 
+    assert all(isinstance(entry, dict) for entry in evai_runtime.trace_log)
+
