@@ -13,6 +13,16 @@ class SeedPatternMatcher:
 
     def match_pattern(self, current_seed_ids):
         for pattern in self.patterns:
-            if pattern["Pattern"] == current_seed_ids:
+            if pattern.get("Pattern") == current_seed_ids:
                 return pattern
         return None
+
+    def find_patterns(self, seeds):
+        """Return a list of patterns matching the provided seed objects."""
+        ids = [s["id"] if isinstance(s, dict) else getattr(s, "id", None) for s in seeds]
+        matches = []
+        for pattern in self.patterns:
+            pattern_ids = pattern.get("Pattern", [])
+            if all(pid in ids for pid in pattern_ids):
+                matches.append(pattern)
+        return matches

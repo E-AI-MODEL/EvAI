@@ -26,10 +26,20 @@ class EvAIRuntime:
             ]
         }
 
-    def generate_cot(self, parameter, context, rubric):
-        active_seeds = self.seed_memory.get_active_seeds()
-        seed_ids = [s.id for s in active_seeds]
-        matched_pattern = self.pattern_matcher.match_pattern(seed_ids)
+    def generate_cot(self, params):
+        """Generate a chain of thought based on provided parameters."""
+        parameter = params.get("query")
+        context = params.get("context", {})
+        rubric = {}
+        rubrics = params.get("rubrics", [])
+        if isinstance(rubrics, list) and rubrics:
+            rubric = rubrics[0] if isinstance(rubrics[0], dict) else {"descriptor": rubrics[0]}
+        elif isinstance(rubrics, dict):
+            rubric = rubrics
+
+        active_seeds = self.seed_memory.get_active_seeds(context)
+        seed_ids = [s["id"] for s in active_seeds]
+        matched_pattern = self.pattern_matcher.find_patterns(active_seeds)
 
         # Enhanced reasoning with seed-based explanations
         reasoning = []
@@ -51,14 +61,13 @@ class EvAIRuntime:
         })
 
         return {
-            "cot_trace": reasoning,
-            "uncertainty_label": self.estimate_uncertainty(reasoning),
-            "matched_descriptors": [rubric.get("descriptor", "n.v.t.")],
-            "active_seeds": [{"id": s.id, "type": s.type, "intention": s.intention, "emotion": s.emotion} for s in active_seeds]
+            "reasoning_steps": reasoning,
+            "active_seeds": active_seeds,
+            "trace_log": self.trace_log,
         }
 
     def step_explain_with_seeds(self, param, rubric, active_seeds):
-        seed_explanations = [f"Seed {s.id} ({s.type}): {s.intention}" for s in active_seeds]
+        seed_explanations = [f"Seed {s['id']} ({s['type']}): {s['intention']}" for s in active_seeds]
         return f"[Explain] Parameter {param} wordt verklaard via rubric: {rubric.get('description', 'geen beschrijving')}. " \
                f"Gebruikte seeds: {'; '.join(seed_explanations)}"
 
@@ -69,12 +78,12 @@ class EvAIRuntime:
         return validation
 
     def step_assumptions_with_context(self, param, context, active_seeds):
-        seed_emotions = [f"{s.emotion} ({s.id})" for s in active_seeds]
+        seed_emotions = [f"{s['emotion']} ({s['id']})" for s in active_seeds]
         return f"[Assumptions] Context analyse met emotionele seeds: {', '.join(seed_emotions)}. " \
                f"Gebruikersinput: {context.get('user_input', 'n.v.t.')}"
 
     def step_alternatives_with_seeds(self, param, rubric, active_seeds):
-        seed_intentions = [f"{s.intention} ({s.id})" for s in active_seeds]
+        seed_intentions = [f"{s['intention']} ({s['id']})" for s in active_seeds]
         return f"[Alternatives] Alternatieve scenario's gebaseerd op seeds: {', '.join(seed_intentions)}. " \
                f"Risico's: {rubric.get('risks', 'geen')}"
 
@@ -89,3 +98,5 @@ class EvAIRuntime:
         if any(indicator in str(trace).lower() for indicator in uncertainty_indicators):
             return "⚠️ Onzekerheid gedetecteerd"
         return "✅ Betrouwbare analyse"
+
+
